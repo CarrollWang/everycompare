@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:editor.mergely.com)",
+      "Bash(npx:*)",
+      "Bash(npm install:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(rm:*)",
+      "Bash(npm run lint)",
+      "Bash(mv:*)",
+      "Bash(pkill:*)",
+      "Bash(cp:*)"
+    ],
+    "deny": []
+  }
+}
