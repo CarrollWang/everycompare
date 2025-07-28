@@ -2,6 +2,8 @@
 
 import React, { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { showToast } from './toast';
+import { translations, Language } from '@/lib/translations';
 
 // 动态导入Monaco编辑器，禁用SSR
 const MonacoDiffEditor = dynamic(
@@ -26,9 +28,10 @@ interface EnhancedDiffEditorProps {
   leftReadOnly?: boolean;
   rightReadOnly?: boolean;
   theme?: string;
+  currentLanguage?: Language;
 }
 
-const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = ({
+const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = React.memo(({
   leftContent,
   rightContent,
   showLineNumbers = true,
@@ -38,15 +41,23 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = ({
   leftReadOnly = false,
   rightReadOnly = false,
   theme = 'vs',
+  currentLanguage = 'en'
 }) => {
   const diffEditorRef = useRef<any>(null);
-  const updateLockRef = useRef<boolean>(false);
-  const initializationCompleteRef = useRef<boolean>(false);
   const [isMounted, setIsMounted] = useState(false);
+  const lastToastTime = useRef<{ left: number; right: number }>({ left: 0, right: 0 });
+  const isUpdatingRef = useRef(false);
+  const eventListenersRef = useRef<Array<() => void>>([]);
 
   // 组件挂载后设置标志
   useEffect(() => {
     setIsMounted(true);
+    
+    // 清理函数，确保组件卸载时移除所有事件监听器
+    return () => {
+      eventListenersRef.current.forEach(cleanup => cleanup());
+      eventListenersRef.current = [];
+    };
   }, []);
 
   // 使用useMemo确保编辑器选项的稳定性
@@ -69,65 +80,26 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = ({
     },
   }), [showLineNumbers]);
 
-  // 原子性状态更新函数
-  const atomicUpdate = useCallback((updateFn: () => void) => {
-    if (!isMounted || updateLockRef.current || !diffEditorRef.current || !initializationCompleteRef.current) {
+  // 显示只读提示的函数，带防抖机制
+  const showReadOnlyWarning = useCallback((side: 'left' | 'right') => {
+    const now = Date.now();
+    const lastTime = lastToastTime.current[side];
+    
+    // 防止频繁显示提示（2秒内只显示一次）
+    if (now - lastTime < 2000) {
       return;
     }
     
-    updateLockRef.current = true;
+    lastToastTime.current[side] = now;
     
-    try {
-      updateFn();
-    } catch (error) {
-      console.error('Editor update error:', error);
-    } finally {
-      // 使用requestAnimationFrame确保DOM更新完成后再释放锁
-      requestAnimationFrame(() => {
-        updateLockRef.current = false;
-      });
-    }
-  }, [isMounted]);
-
-  // 安全的模型值更新
-  const updateModelValue = useCallback((model: any, newValue: string) => {
-    if (!model || model.getValue() === newValue) {
-      return;
-    }
+    const t = translations[currentLanguage];
+    const message = side === 'left' 
+      ? t.toast.leftReadOnlyWarning 
+      : t.toast.rightReadOnlyWarning;
     
-    // 使用编辑操作而不是直接setValue，避免lineNumber错误
-    const fullRange = model.getFullModelRange();
-    model.pushEditOperations(
-      [],
-      [{
-        range: fullRange,
-        text: newValue
-      }],
-      () => null
-    );
-  }, []);
-
-  // 安全的编辑器选项更新
-  const updateEditorOptions = useCallback((
-    editor: any, 
-    readOnly: boolean
-  ) => {
-    if (!isMounted) return;
-    
-    try {
-      const currentOptions = editor.getOptions();
-      
-      // 只在需要时更新选项
-      if (currentOptions.get(72) !== readOnly) { // 72 is EditorOption.readOnly
-        editor.updateOptions({ 
-          readOnly,
-          domReadOnly: readOnly
-        });
-      }
-    } catch (error) {
-      console.error('Failed to update editor options:', error);
-    }
-  }, [isMounted]);
+    console.log('Showing toast in language:', currentLanguage, 'Message:', message);
+    showToast(message, 'warning', 4000);
+  }, [currentLanguage]);
 
   const handleEditorDidMount = useCallback((editor: any) => {
     if (!isMounted) return;
@@ -148,97 +120,192 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = ({
     const originalEditor = editor.getOriginalEditor();
     const modifiedEditor = editor.getModifiedEditor();
     
-    // 初始化编辑器选项
-    updateEditorOptions(originalEditor, leftReadOnly);
-    updateEditorOptions(modifiedEditor, rightReadOnly);
+    // 安全地设置初始只读状态
+    try {
+      originalEditor.updateOptions({ 
+        readOnly: leftReadOnly,
+        domReadOnly: leftReadOnly
+      });
+      modifiedEditor.updateOptions({ 
+        readOnly: rightReadOnly,
+        domReadOnly: rightReadOnly
+      });
+    } catch (error) {
+      console.error('Error setting initial readonly state:', error);
+    }
+
+    // 添加键盘输入监听器，并保存清理函数
+    const leftKeyDownDisposable = originalEditor.onKeyDown((e: any) => {
+      console.log('Left editor keydown:', { keyCode: e.keyCode, leftReadOnly });
+      if (leftReadOnly && (
+        (e.keyCode >= 48 && e.keyCode <= 57) || // 数字0-9
+        (e.keyCode >= 65 && e.keyCode <= 90) || // 字母A-Z
+        (e.keyCode >= 186 && e.keyCode <= 222) || // 符号
+        e.keyCode === 32 || // 空格
+        e.keyCode === 13 || // 回车
+        e.keyCode === 8 || // 退格
+        e.keyCode === 46 // 删除
+      )) {
+        console.log('Showing left readonly warning');
+        showReadOnlyWarning('left');
+      }
+    });
+
+    const rightKeyDownDisposable = modifiedEditor.onKeyDown((e: any) => {
+      console.log('Right editor keydown:', { keyCode: e.keyCode, rightReadOnly });
+      if (rightReadOnly && (
+        (e.keyCode >= 48 && e.keyCode <= 57) || // 数字0-9
+        (e.keyCode >= 65 && e.keyCode <= 90) || // 字母A-Z
+        (e.keyCode >= 186 && e.keyCode <= 222) || // 符号
+        e.keyCode === 32 || // 空格
+        e.keyCode === 13 || // 回车
+        e.keyCode === 8 || // 退格
+        e.keyCode === 46 // 删除
+      )) {
+        console.log('Showing right readonly warning');
+        showReadOnlyWarning('right');
+      }
+    });
+
+    // 添加粘贴事件监听
+    const leftPasteDisposable = originalEditor.onDidPaste(() => {
+      if (leftReadOnly) {
+        showReadOnlyWarning('left');
+      }
+    });
+
+    const rightPasteDisposable = modifiedEditor.onDidPaste(() => {
+      if (rightReadOnly) {
+        showReadOnlyWarning('right');
+      }
+    });
+
+    // 保存清理函数
+    eventListenersRef.current.push(
+      () => leftKeyDownDisposable.dispose(),
+      () => rightKeyDownDisposable.dispose(),
+      () => leftPasteDisposable.dispose(),
+      () => rightPasteDisposable.dispose()
+    );
 
     // 添加内容变化监听器
     const originalModel = originalEditor.getModel();
     const modifiedModel = modifiedEditor.getModel();
 
     if (originalModel && onLeftChange) {
-      originalModel.onDidChangeContent(() => {
-        if (!updateLockRef.current) {
+      const leftChangeDisposable = originalModel.onDidChangeContent(() => {
+        if (!isUpdatingRef.current) {
           const newValue = originalModel.getValue();
           onLeftChange(newValue);
         }
       });
+      eventListenersRef.current.push(() => leftChangeDisposable.dispose());
     }
 
     if (modifiedModel && onRightChange) {
-      modifiedModel.onDidChangeContent(() => {
-        if (!updateLockRef.current) {
+      const rightChangeDisposable = modifiedModel.onDidChangeContent(() => {
+        if (!isUpdatingRef.current) {
           const newValue = modifiedModel.getValue();
           onRightChange(newValue);
         }
       });
+      eventListenersRef.current.push(() => rightChangeDisposable.dispose());
     }
     
-    // 标记初始化完成
-    initializationCompleteRef.current = true;
-    
     console.log('Editor initialized with readOnly states:', { leftReadOnly, rightReadOnly });
-  }, [isMounted, leftReadOnly, rightReadOnly, onLeftChange, onRightChange, updateEditorOptions]);
+  }, [isMounted, leftReadOnly, rightReadOnly, onLeftChange, onRightChange, showReadOnlyWarning]);
 
-  // 原子性内容更新
-  useEffect(() => {
-    if (!isMounted) return;
+  // 安全的内容更新，使用防抖优化
+  const updateContentDebounced = useCallback((
+    editor: any,
+    model: any, 
+    newContent: string,
+    currentContent: string
+  ) => {
+    if (!model || !editor || model.getValue() === newContent) return;
     
-    atomicUpdate(() => {
-      if (!diffEditorRef.current) return;
-      
-      const originalEditor = diffEditorRef.current.getOriginalEditor();
-      const originalModel = originalEditor.getModel();
-      
-      if (originalModel) {
-        updateModelValue(originalModel, leftContent);
+    isUpdatingRef.current = true;
+    try {
+      // 批量更新，减少重绘次数
+      editor.getModel()?.pushStackElement();
+      model.setValue(newContent);
+      editor.getModel()?.pushStackElement();
+    } catch (error) {
+      console.error('Error updating content:', error);
+    } finally {
+      // 使用 requestIdleCallback 优化更新时机
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => {
+          isUpdatingRef.current = false;
+        });
+      } else {
+        setTimeout(() => {
+          isUpdatingRef.current = false;
+        }, 16); // 约一帧的时间
+      }
+    }
+  }, []);
+
+  // 优化内容更新
+  useEffect(() => {
+    if (!isMounted || !diffEditorRef.current) return;
+    
+    const originalEditor = diffEditorRef.current.getOriginalEditor();
+    const originalModel = originalEditor?.getModel();
+    
+    if (originalModel) {
+      updateContentDebounced(originalEditor, originalModel, leftContent, originalModel.getValue());
+    }
+  }, [leftContent, isMounted, updateContentDebounced]);
+
+  useEffect(() => {
+    if (!isMounted || !diffEditorRef.current) return;
+    
+    const modifiedEditor = diffEditorRef.current.getModifiedEditor();
+    const modifiedModel = modifiedEditor?.getModel();
+    
+    if (modifiedModel) {
+      updateContentDebounced(modifiedEditor, modifiedModel, rightContent, modifiedModel.getValue());
+    }
+  }, [rightContent, isMounted, updateContentDebounced]);
+
+  // 只读状态更新，使用批处理优化
+  useEffect(() => {
+    if (!isMounted || !diffEditorRef.current) return;
+    
+    const originalEditor = diffEditorRef.current.getOriginalEditor();
+    const modifiedEditor = diffEditorRef.current.getModifiedEditor();
+    
+    console.log('Updating readOnly states:', { leftReadOnly, rightReadOnly });
+    
+    // 使用 requestAnimationFrame 优化更新时机
+    const updateFrame = requestAnimationFrame(() => {
+      try {
+        // 批量更新减少重绘
+        originalEditor.updateOptions({ 
+          readOnly: leftReadOnly,
+          domReadOnly: leftReadOnly
+        });
+        modifiedEditor.updateOptions({ 
+          readOnly: rightReadOnly,
+          domReadOnly: rightReadOnly
+        });
+        
+        // 延迟布局更新
+        const layoutFrame = requestAnimationFrame(() => {
+          originalEditor.layout();
+          modifiedEditor.layout();
+          console.log('ReadOnly state updated and synced');
+        });
+        
+        return () => cancelAnimationFrame(layoutFrame);
+      } catch (error) {
+        console.error('Error updating readonly state:', error);
       }
     });
-  }, [leftContent, atomicUpdate, updateModelValue, isMounted]);
-
-  useEffect(() => {
-    if (!isMounted) return;
     
-    atomicUpdate(() => {
-      if (!diffEditorRef.current) return;
-      
-      const modifiedEditor = diffEditorRef.current.getModifiedEditor();
-      const modifiedModel = modifiedEditor.getModel();
-      
-      if (modifiedModel) {
-        updateModelValue(modifiedModel, rightContent);
-      }
-    });
-  }, [rightContent, atomicUpdate, updateModelValue, isMounted]);
-
-  // 原子性只读状态更新
-  useEffect(() => {
-    if (!isMounted) return;
-    
-    atomicUpdate(() => {
-      if (!diffEditorRef.current) return;
-      
-      const originalEditor = diffEditorRef.current.getOriginalEditor();
-      const modifiedEditor = diffEditorRef.current.getModifiedEditor();
-      
-      console.log('Updating readOnly states atomically:', { leftReadOnly, rightReadOnly });
-      
-      // 更新编辑器选项
-      updateEditorOptions(originalEditor, leftReadOnly);
-      updateEditorOptions(modifiedEditor, rightReadOnly);
-      
-      // 重新布局编辑器
-      originalEditor.layout();
-      modifiedEditor.layout();
-      
-      // 焦点管理
-      if (!leftReadOnly) {
-        originalEditor.focus();
-      } else if (!rightReadOnly) {
-        modifiedEditor.focus();
-      }
-    });
-  }, [leftReadOnly, rightReadOnly, atomicUpdate, updateEditorOptions, isMounted]);
+    return () => cancelAnimationFrame(updateFrame);
+  }, [leftReadOnly, rightReadOnly, isMounted]);
 
   // 服务端和客户端统一渲染
   if (!isMounted) {
@@ -259,10 +326,13 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = ({
         onMount={handleEditorDidMount}
         options={editorOptions}
         theme={theme}
-        key={`${language}-${theme}`} // 强制重新挂载当语言或主题变化时
+        key={`editor-${language}-${theme}`}
       />
     </div>
   );
-};
+});
+
+// 添加 displayName 用于调试
+EnhancedDiffEditor.displayName = 'EnhancedDiffEditor';
 
 export default EnhancedDiffEditor;

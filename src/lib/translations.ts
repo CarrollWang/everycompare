@@ -48,6 +48,10 @@ export const translations = {
       right: "Right",
       lines: "lines",
       chars: "chars"
+    },
+    toast: {
+      leftReadOnlyWarning: "Left editor is locked. Click 'Enable Left Edit' to make changes.",
+      rightReadOnlyWarning: "Right editor is locked. Click 'Enable Right Edit' to make changes."
     }
   },
   zh: {
@@ -99,6 +103,10 @@ export const translations = {
       right: "右侧", 
       lines: "行",
       chars: "字符"
+    },
+    toast: {
+      leftReadOnlyWarning: "左侧编辑器已锁定。点击'启用左侧编辑'按钮来进行修改。",
+      rightReadOnlyWarning: "右侧编辑器已锁定。点击'启用右侧编辑'按钮来进行修改。"
     }
   }
 };

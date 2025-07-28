@@ -11,7 +11,10 @@
       "Bash(npm run lint)",
       "Bash(mv:*)",
       "Bash(pkill:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(curl:*)",
+      "Bash(find:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": []
   }

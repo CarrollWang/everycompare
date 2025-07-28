@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -18,13 +18,11 @@ import {
 } from "lucide-react";
 import EnhancedDiffEditor from "@/components/enhanced-diff-editor";
 import LanguageSwitcher from "@/components/language-switcher";
+import { ToastContainer } from "@/components/toast";
 import { translations, Language } from "@/lib/translations";
 
-export default function Home() {
-  const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
-  const t = translations[currentLanguage];
-  
-  const [leftContent, setLeftContent] = useState(`// Original code
+// 将初始内容移到组件外部，避免每次渲染重新创建
+const INITIAL_LEFT_CONTENT = `// Original code
 function calculateTotal(items) {
   let total = 0;
   for (let i = 0; i < items.length; i++) {
@@ -45,9 +43,9 @@ class ShoppingCart {
   getTotal() {
     return calculateTotal(this.items);
   }
-}`);
+}`;
 
-  const [rightContent, setRightContent] = useState(`// Modified code
+const INITIAL_RIGHT_CONTENT = `// Modified code
 function calculateTotal(items) {
   return items.reduce((total, item) => {
     return total + (item.price * item.quantity);
@@ -76,14 +74,43 @@ class ShoppingCart {
   getItemCount() {
     return this.items.length;
   }
-}`);
+}`;
 
+// 将语言选项移到组件外部
+const LANGUAGE_OPTIONS = [
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "python", label: "Python" },
+  { value: "java", label: "Java" },
+  { value: "csharp", label: "C#" },
+  { value: "cpp", label: "C++" },
+  { value: "html", label: "HTML" },
+  { value: "css", label: "CSS" },
+  { value: "json", label: "JSON" },
+  { value: "markdown", label: "Markdown" },
+  { value: "plaintext", label: "Plain Text" },
+];
+
+export default function Home() {
+  const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
+  const [leftContent, setLeftContent] = useState(INITIAL_LEFT_CONTENT);
+  const [rightContent, setRightContent] = useState(INITIAL_RIGHT_CONTENT);
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [language, setLanguage] = useState("javascript");
   const [rightReadOnly, setRightReadOnly] = useState(false);
   const [leftReadOnly, setLeftReadOnly] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  
+
+  // 使用useMemo缓存translations，避免每次重新计算
+  const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
+
+  // 使用useMemo缓存语言选项，避免每次重新创建数组
+  const languages = useMemo(() => LANGUAGE_OPTIONS.map(lang => ({
+    ...lang,
+    label: t.languages[lang.value as keyof typeof t.languages] || lang.label
+  })), [t.languages]);
+
+  // 主题切换效果
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -91,74 +118,25 @@ class ShoppingCart {
       document.documentElement.classList.remove('dark');
     }
   }, [isDark]);
-  
-  const handleSwap = () => {
+
+  // 使用useCallback缓存事件处理函数，避免子组件不必要的重渲染
+  const handleSwap = useCallback(() => {
     const temp = leftContent;
     setLeftContent(rightContent);
     setRightContent(temp);
-  };
-  
-  const handleReset = () => {
-    setLeftContent(`// Original code
-function calculateTotal(items) {
-  let total = 0;
-  for (let i = 0; i < items.length; i++) {
-    total += items[i].price * items[i].quantity;
-  }
-  return total;
-}
+  }, [leftContent, rightContent]);
 
-class ShoppingCart {
-  constructor() {
-    this.items = [];
-  }
-  
-  addItem(item) {
-    this.items.push(item);
-  }
-  
-  getTotal() {
-    return calculateTotal(this.items);
-  }
-}`);
-    setRightContent(`// Modified code
-function calculateTotal(items) {
-  return items.reduce((total, item) => {
-    return total + (item.price * item.quantity);
-  }, 0);
-}
+  const handleReset = useCallback(() => {
+    setLeftContent(INITIAL_LEFT_CONTENT);
+    setRightContent(INITIAL_RIGHT_CONTENT);
+  }, []);
 
-class ShoppingCart {
-  constructor() {
-    this.items = [];
-    this.discount = 0;
-  }
-  
-  addItem(item) {
-    this.items.push(item);
-  }
-  
-  setDiscount(percentage) {
-    this.discount = percentage;
-  }
-  
-  getTotal() {
-    const subtotal = calculateTotal(this.items);
-    return subtotal * (1 - this.discount / 100);
-  }
-  
-  getItemCount() {
-    return this.items.length;
-  }
-}`);
-  };
-  
-  const handleCopyDiff = () => {
+  const handleCopyDiff = useCallback(() => {
     const diffText = `--- Original\n+++ Modified\n\n${leftContent}\n\n--- End Original ---\n\n${rightContent}`;
     navigator.clipboard.writeText(diffText);
-  };
+  }, [leftContent, rightContent]);
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     const element = document.createElement("a");
     const file = new Blob([`Original:\n${leftContent}\n\nModified:\n${rightContent}`], {
       type: 'text/plain'
@@ -168,9 +146,11 @@ class ShoppingCart {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
-  };
+    // 清理blob URL防止内存泄漏
+    URL.revokeObjectURL(element.href);
+  }, [leftContent, rightContent]);
 
-  const handleFileUpload = (side: 'left' | 'right') => {
+  const handleFileUpload = useCallback((side: 'left' | 'right') => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.txt,.js,.ts,.py,.java,.cpp,.c,.html,.css,.json,.md';
@@ -191,26 +171,38 @@ class ShoppingCart {
       }
     };
     input.click();
-  };
+  }, []);
 
-  const handleNewFile = () => {
+  const handleNewFile = useCallback(() => {
     setLeftContent('');
     setRightContent('');
-  };
+  }, []);
 
-  const languages = [
-    { value: "javascript", label: t.languages.javascript },
-    { value: "typescript", label: t.languages.typescript },
-    { value: "python", label: t.languages.python },
-    { value: "java", label: t.languages.java },
-    { value: "csharp", label: t.languages.csharp },
-    { value: "cpp", label: t.languages.cpp },
-    { value: "html", label: t.languages.html },
-    { value: "css", label: t.languages.css },
-    { value: "json", label: t.languages.json },
-    { value: "markdown", label: t.languages.markdown },
-    { value: "plaintext", label: t.languages.plaintext },
-  ];
+  const toggleLeftReadOnly = useCallback(() => {
+    console.log('Before click, leftReadOnly:', leftReadOnly);
+    setLeftReadOnly(!leftReadOnly);
+    console.log('After click, leftReadOnly will be:', !leftReadOnly);
+  }, [leftReadOnly]);
+
+  const toggleRightReadOnly = useCallback(() => {
+    setRightReadOnly(!rightReadOnly);
+  }, [rightReadOnly]);
+
+  const toggleLineNumbers = useCallback(() => {
+    setShowLineNumbers(!showLineNumbers);
+  }, [showLineNumbers]);
+
+  const toggleTheme = useCallback(() => {
+    setIsDark(!isDark);
+  }, [isDark]);
+
+  // 使用useMemo缓存统计信息，避免每次重新计算
+  const stats = useMemo(() => ({
+    leftLines: leftContent.split('\n').length,
+    leftChars: leftContent.length,
+    rightLines: rightContent.split('\n').length,
+    rightChars: rightContent.length,
+  }), [leftContent, rightContent]);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -233,7 +225,7 @@ class ShoppingCart {
               currentLanguage={currentLanguage} 
               onLanguageChange={(language: string) => setCurrentLanguage(language as Language)} 
             />
-            <Button variant="outline" size="sm" onClick={() => setIsDark(!isDark)} className="btn-hover shadow-modern">
+            <Button variant="outline" size="sm" onClick={toggleTheme} className="btn-hover shadow-modern">
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <div className="w-px h-6 bg-border"></div>
@@ -276,7 +268,7 @@ class ShoppingCart {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => setShowLineNumbers(!showLineNumbers)}
+                onClick={toggleLineNumbers}
                 className="btn-hover shadow-modern"
               >
                 {showLineNumbers ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -306,11 +298,7 @@ class ShoppingCart {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => {
-                console.log('Before click, leftReadOnly:', leftReadOnly);
-                setLeftReadOnly(!leftReadOnly);
-                console.log('After click, leftReadOnly will be:', !leftReadOnly);
-              }}
+              onClick={toggleLeftReadOnly}
               className="btn-hover shadow-modern"
             >
               <Settings className="h-4 w-4 mr-2" />
@@ -328,7 +316,7 @@ class ShoppingCart {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => setRightReadOnly(!rightReadOnly)}
+              onClick={toggleRightReadOnly}
               className="btn-hover shadow-modern"
             >
               <Settings className="h-4 w-4 mr-2" />
@@ -368,6 +356,7 @@ class ShoppingCart {
             language={language}
             leftReadOnly={leftReadOnly}
             rightReadOnly={rightReadOnly}
+            currentLanguage={currentLanguage}
             theme={isDark ? 'vs-dark' : 'vs'}
           />
         </div>
@@ -386,11 +375,14 @@ class ShoppingCart {
             <span>{t.status.right}: {rightReadOnly ? t.status.readOnly : t.status.editable}</span>
           </div>
           <div className="flex items-center space-x-6">
-            <span className="font-mono text-xs">{t.status.left}: {leftContent.split('\n').length} {t.status.lines}, {leftContent.length} {t.status.chars}</span>
-            <span className="font-mono text-xs">{t.status.right}: {rightContent.split('\n').length} {t.status.lines}, {rightContent.length} {t.status.chars}</span>
+            <span className="font-mono text-xs">{t.status.left}: {stats.leftLines} {t.status.lines}, {stats.leftChars} {t.status.chars}</span>
+            <span className="font-mono text-xs">{t.status.right}: {stats.rightLines} {t.status.lines}, {stats.rightChars} {t.status.chars}</span>
           </div>
         </div>
       </div>
+
+      {/* Toast Container */}
+      <ToastContainer language={currentLanguage} />
     </div>
   );
 }
