@@ -43,7 +43,7 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = React.memo(({
   theme = 'vs',
   currentLanguage = 'en'
 }) => {
-  const diffEditorRef = useRef<any>(null);
+  const diffEditorRef = useRef<import('monaco-editor').editor.IStandaloneDiffEditor | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const lastToastTime = useRef<{ left: number; right: number }>({ left: 0, right: 0 });
   const isUpdatingRef = useRef(false);
@@ -101,7 +101,7 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = React.memo(({
     showToast(message, 'warning', 4000);
   }, [currentLanguage]);
 
-  const handleEditorDidMount = useCallback((editor: any) => {
+  const handleEditorDidMount = useCallback((editor: import('monaco-editor').editor.IStandaloneDiffEditor) => {
     if (!isMounted) return;
     
     diffEditorRef.current = editor;
@@ -135,7 +135,7 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = React.memo(({
     }
 
     // 添加键盘输入监听器，并保存清理函数
-    const leftKeyDownDisposable = originalEditor.onKeyDown((e: any) => {
+    const leftKeyDownDisposable = originalEditor.onKeyDown((e: import('monaco-editor').IKeyboardEvent) => {
       console.log('Left editor keydown:', { keyCode: e.keyCode, leftReadOnly });
       if (leftReadOnly && (
         (e.keyCode >= 48 && e.keyCode <= 57) || // 数字0-9
@@ -151,7 +151,7 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = React.memo(({
       }
     });
 
-    const rightKeyDownDisposable = modifiedEditor.onKeyDown((e: any) => {
+    const rightKeyDownDisposable = modifiedEditor.onKeyDown((e: import('monaco-editor').IKeyboardEvent) => {
       console.log('Right editor keydown:', { keyCode: e.keyCode, rightReadOnly });
       if (rightReadOnly && (
         (e.keyCode >= 48 && e.keyCode <= 57) || // 数字0-9
@@ -217,10 +217,9 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = React.memo(({
 
   // 安全的内容更新，使用防抖优化
   const updateContentDebounced = useCallback((
-    editor: any,
-    model: any, 
-    newContent: string,
-    currentContent: string
+    editor: import('monaco-editor').editor.IStandaloneCodeEditor,
+    model: import('monaco-editor').editor.ITextModel, 
+    newContent: string
   ) => {
     if (!model || !editor || model.getValue() === newContent) return;
     
@@ -254,7 +253,7 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = React.memo(({
     const originalModel = originalEditor?.getModel();
     
     if (originalModel) {
-      updateContentDebounced(originalEditor, originalModel, leftContent, originalModel.getValue());
+      updateContentDebounced(originalEditor, originalModel, leftContent);
     }
   }, [leftContent, isMounted, updateContentDebounced]);
 
@@ -265,7 +264,7 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = React.memo(({
     const modifiedModel = modifiedEditor?.getModel();
     
     if (modifiedModel) {
-      updateContentDebounced(modifiedEditor, modifiedModel, rightContent, modifiedModel.getValue());
+      updateContentDebounced(modifiedEditor, modifiedModel, rightContent);
     }
   }, [rightContent, isMounted, updateContentDebounced]);
 

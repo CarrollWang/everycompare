@@ -109,7 +109,7 @@ export default function Home() {
   const languages = useMemo(() => LANGUAGE_OPTIONS.map(lang => ({
     ...lang,
     label: t.languages[lang.value as keyof typeof t.languages] || lang.label
-  })), [t.languages]);
+  })), [t]);
 
   // 主题切换效果
   useEffect(() => {

@@ -1,26 +1,32 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AlertCircle, X } from 'lucide-react';
-import { translations, Language } from '@/lib/translations';
+import { Language } from '@/lib/translations';
 
 interface ToastProps {
   message: string;
   type?: 'info' | 'warning' | 'error';
   duration?: number;
   onClose?: () => void;
-  language?: Language;
 }
 
 const Toast: React.FC<ToastProps> = ({
   message,
   type = 'info',
   duration = 3000,
-  onClose,
-  language = 'en'
+  onClose
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setIsAnimating(false);
+    setTimeout(() => {
+      setIsVisible(false);
+      onClose?.();
+    }, 200);
+  }, [onClose]);
 
   useEffect(() => {
     setIsAnimating(true);
@@ -30,15 +36,7 @@ const Toast: React.FC<ToastProps> = ({
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration]);
-
-  const handleClose = () => {
-    setIsAnimating(false);
-    setTimeout(() => {
-      setIsVisible(false);
-      onClose?.();
-    }, 200);
-  };
+  }, [duration, handleClose]);
 
   if (!isVisible) return null;
 
@@ -119,7 +117,7 @@ export const showToast = (message: string, type: 'info' | 'warning' | 'error' = 
   return id;
 };
 
-export const ToastContainer: React.FC<ToastContainerProps> = ({ language = 'en' }) => {
+export const ToastContainer: React.FC<ToastContainerProps> = () => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
@@ -152,7 +150,6 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ language = 'en' 
           message={toast.message}
           type={toast.type}
           duration={toast.duration}
-          language={language}
           onClose={() => removeToast(toast.id)}
         />
       ))}
