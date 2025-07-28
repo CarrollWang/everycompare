@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EverCompare - Professional Text Comparison Tool",
-  description: "EverCompare is a professional text comparison and diff analysis tool. Compare documents, code files, and text content with advanced side-by-side visualization and powerful editing features.",
-  keywords: "text comparison, diff tool, code comparison, document diff, text analysis, EverCompare",
-  authors: [{ name: "EverCompare Team" }],
+  title: "EveryCompare - Professional Text Comparison Tool",
+  description: "EveryCompare is a professional text comparison and diff analysis tool. Compare documents, code files, and text content with advanced side-by-side visualization and powerful editing features.",
+  keywords: "text comparison, diff tool, code comparison, document diff, text analysis, EveryCompare",
+  authors: [{ name: "EveryCompare Team" }],
   openGraph: {
-    title: "EverCompare - Professional Text Comparison Tool",
+    title: "EveryCompare - Professional Text Comparison Tool",
     description: "Professional text comparison and diff analysis tool",
-    siteName: "EverCompare",
+    siteName: "EveryCompare",
     type: "website",
   },
 };

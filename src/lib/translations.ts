@@ -1,7 +1,7 @@
 export const translations = {
   en: {
     app: {
-      title: "EverCompare",
+      title: "EveryCompare",
       description: "Professional text comparison and diff analysis tool"
     },
     header: {
@@ -56,7 +56,7 @@ export const translations = {
   },
   zh: {
     app: {
-      title: "EverCompare",
+      title: "EveryCompare",
       description: "专业的文本对比与差异分析工具"
     },
     header: {
