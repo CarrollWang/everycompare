@@ -14,7 +14,8 @@ import {
   Eye,
   EyeOff,
   Moon,
-  Sun
+  Sun,
+  GitCompare
 } from "lucide-react";
 import EnhancedDiffEditor from "@/components/enhanced-diff-editor";
 import LanguageSwitcher from "@/components/language-switcher";
@@ -211,11 +212,11 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center">
-                <FileText className="h-4 w-4 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
+                <GitCompare className="h-4 w-4 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">{t.app.title}</h1>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">{t.app.title}</h1>
                 <span className="text-xs text-muted-foreground">{t.app.description}</span>
               </div>
             </div>
@@ -332,14 +333,14 @@ export default function Home() {
         <div className="flex border-b border-border bg-gradient-to-r from-muted/30 to-muted/10">
           <div className="flex-1 px-6 py-3 bg-muted/30 backdrop-blur-sm">
             <span className="text-sm font-semibold text-foreground flex items-center">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+              <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
               {t.editor.original}
             </span>
           </div>
           <Separator orientation="vertical" />
           <div className="flex-1 px-6 py-3 bg-muted/30 backdrop-blur-sm">
             <span className="text-sm font-semibold text-foreground flex items-center">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+              <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
               {t.editor.modified}
             </span>
           </div>

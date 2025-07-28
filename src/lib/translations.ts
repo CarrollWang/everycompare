@@ -1,8 +1,8 @@
 export const translations = {
   en: {
     app: {
-      title: "Mergely Editor",
-      description: "Compare and merge text differences"
+      title: "EverCompare",
+      description: "Professional text comparison and diff analysis tool"
     },
     header: {
       new: "New",
@@ -56,8 +56,8 @@ export const translations = {
   },
   zh: {
     app: {
-      title: "文档比较编辑器",
-      description: "比较和合并文本差异"
+      title: "EverCompare",
+      description: "专业的文本对比与差异分析工具"
     },
     header: {
       new: "新建",
