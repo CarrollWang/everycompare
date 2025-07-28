@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { DiffEditor as MonacoDiffEditor } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 
@@ -11,7 +11,8 @@ interface EnhancedDiffEditorProps {
   onLeftChange?: (value: string) => void;
   onRightChange?: (value: string) => void;
   language?: string;
-  readOnly?: boolean;
+  leftReadOnly?: boolean;
+  rightReadOnly?: boolean;
   theme?: string;
 }
 
@@ -22,10 +23,14 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = ({
   onLeftChange,
   onRightChange,
   language = 'javascript',
-  readOnly = false,
+  leftReadOnly = false,
+  rightReadOnly = false,
   theme = 'vs',
 }) => {
   const diffEditorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
+  const leftContentRef = useRef(leftContent);
+  const rightContentRef = useRef(rightContent);
+  const isUpdatingFromParent = useRef(false);
 
   const handleEditorDidMount = (editor: monaco.editor.IStandaloneDiffEditor) => {
     diffEditorRef.current = editor;
@@ -41,22 +46,103 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = ({
       diffWordWrap: 'on',
     });
 
+    // Set individual editor options
+    const originalEditor = editor.getOriginalEditor();
+    const modifiedEditor = editor.getModifiedEditor();
+    
+    console.log('Initial readOnly states on mount:', { leftReadOnly, rightReadOnly });
+    
+    originalEditor.updateOptions({ readOnly: leftReadOnly });
+    modifiedEditor.updateOptions({ readOnly: rightReadOnly });
+
     // Add listeners for content changes
-    const originalModel = editor.getOriginalEditor().getModel();
-    const modifiedModel = editor.getModifiedEditor().getModel();
+    const originalModel = originalEditor.getModel();
+    const modifiedModel = modifiedEditor.getModel();
 
     if (originalModel && onLeftChange) {
       originalModel.onDidChangeContent(() => {
-        onLeftChange(originalModel.getValue());
+        if (!isUpdatingFromParent.current) {
+          const newValue = originalModel.getValue();
+          leftContentRef.current = newValue;
+          onLeftChange(newValue);
+        }
       });
     }
 
     if (modifiedModel && onRightChange) {
       modifiedModel.onDidChangeContent(() => {
-        onRightChange(modifiedModel.getValue());
+        if (!isUpdatingFromParent.current) {
+          const newValue = modifiedModel.getValue();
+          rightContentRef.current = newValue;
+          onRightChange(newValue);
+        }
       });
     }
   };
+
+  // Update content when props change (but avoid re-render cycles)
+  useEffect(() => {
+    if (diffEditorRef.current && leftContent !== leftContentRef.current) {
+      isUpdatingFromParent.current = true;
+      const originalEditor = diffEditorRef.current.getOriginalEditor();
+      const originalModel = originalEditor.getModel();
+      if (originalModel) {
+        originalModel.setValue(leftContent);
+        leftContentRef.current = leftContent;
+      }
+      setTimeout(() => {
+        isUpdatingFromParent.current = false;
+      }, 0);
+    }
+  }, [leftContent]);
+
+  useEffect(() => {
+    if (diffEditorRef.current && rightContent !== rightContentRef.current) {
+      isUpdatingFromParent.current = true;
+      const modifiedEditor = diffEditorRef.current.getModifiedEditor();
+      const modifiedModel = modifiedEditor.getModel();
+      if (modifiedModel) {
+        modifiedModel.setValue(rightContent);
+        rightContentRef.current = rightContent;
+      }
+      setTimeout(() => {
+        isUpdatingFromParent.current = false;
+      }, 0);
+    }
+  }, [rightContent]);
+
+  // Update readOnly status when props change
+  useEffect(() => {
+    if (diffEditorRef.current) {
+      const originalEditor = diffEditorRef.current.getOriginalEditor();
+      const modifiedEditor = diffEditorRef.current.getModifiedEditor();
+      
+      console.log('Updating readOnly states:', { leftReadOnly, rightReadOnly });
+      
+      // Update readOnly for both editors
+      originalEditor.updateOptions({ 
+        readOnly: leftReadOnly,
+        domReadOnly: leftReadOnly
+      });
+      modifiedEditor.updateOptions({ 
+        readOnly: rightReadOnly,
+        domReadOnly: rightReadOnly
+      });
+      
+      // Only focus when switching to editable, don't reset content
+      if (!leftReadOnly) {
+        setTimeout(() => originalEditor.focus(), 50);
+      }
+      
+      if (!rightReadOnly) {
+        setTimeout(() => modifiedEditor.focus(), 50);
+      }
+      
+      // Force layout update
+      originalEditor.layout();
+      modifiedEditor.layout();
+    }
+  }, [leftReadOnly, rightReadOnly]);
 
   const editorOptions = {
     fontSize: 14,
@@ -66,7 +152,6 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = ({
     scrollBeyondLastLine: false,
     wordWrap: 'on' as const,
     automaticLayout: true,
-    readOnly,
     renderWhitespace: 'selection' as const,
     renderControlCharacters: true,
     folding: true,
@@ -83,8 +168,8 @@ const EnhancedDiffEditor: React.FC<EnhancedDiffEditorProps> = ({
       <MonacoDiffEditor
         height="100%"
         language={language}
-        original={leftContent}
-        modified={rightContent}
+        original={leftContentRef.current}
+        modified={rightContentRef.current}
         onMount={handleEditorDidMount}
         options={editorOptions}
         theme={theme}

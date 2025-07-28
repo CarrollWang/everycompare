@@ -80,7 +80,8 @@ class ShoppingCart {
 
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [language, setLanguage] = useState("javascript");
-  const [readOnly, setReadOnly] = useState(false);
+  const [rightReadOnly, setRightReadOnly] = useState(false);
+  const [leftReadOnly, setLeftReadOnly] = useState(true);
   const [isDark, setIsDark] = useState(false);
   
   useEffect(() => {
@@ -305,6 +306,15 @@ class ShoppingCart {
             <Button 
               variant="outline" 
               size="sm"
+              onClick={() => setLeftReadOnly(!leftReadOnly)}
+              className="btn-hover shadow-modern"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              {leftReadOnly ? t.toolbar.enableLeftEdit : t.toolbar.leftReadOnly}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
               onClick={handleCopyDiff}
               className="btn-hover shadow-modern"
             >
@@ -314,11 +324,11 @@ class ShoppingCart {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => setReadOnly(!readOnly)}
+              onClick={() => setRightReadOnly(!rightReadOnly)}
               className="btn-hover shadow-modern"
             >
               <Settings className="h-4 w-4 mr-2" />
-              {readOnly ? t.toolbar.enableEdit : t.toolbar.readOnly}
+              {rightReadOnly ? t.toolbar.enableRightEdit : t.toolbar.rightReadOnly}
             </Button>
           </div>
         </div>
@@ -352,7 +362,8 @@ class ShoppingCart {
             onLeftChange={setLeftContent}
             onRightChange={setRightContent}
             language={language}
-            readOnly={readOnly}
+            leftReadOnly={leftReadOnly}
+            rightReadOnly={rightReadOnly}
             theme={isDark ? 'vs-dark' : 'vs'}
           />
         </div>
@@ -367,7 +378,8 @@ class ShoppingCart {
               {t.status.ready}
             </span>
             <span>{t.status.language}: {languages.find(lang => lang.value === language)?.label}</span>
-            <span>{readOnly ? t.status.readOnly : t.status.editable}</span>
+            <span>{t.status.left}: {leftReadOnly ? t.status.readOnly : t.status.editable}</span>
+            <span>{t.status.right}: {rightReadOnly ? t.status.readOnly : t.status.editable}</span>
           </div>
           <div className="flex items-center space-x-6">
             <span className="font-mono text-xs">{t.status.left}: {leftContent.split('\n').length} {t.status.lines}, {leftContent.length} {t.status.chars}</span>

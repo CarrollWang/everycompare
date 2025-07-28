@@ -15,8 +15,12 @@ export const translations = {
       swap: "Swap",
       reset: "Reset",
       copyDiff: "Copy Diff",
-      enableEdit: "Enable Edit",
-      readOnly: "Read Only"
+      enableEdit: "Enable Right Edit",
+      readOnly: "Lock Right Side",
+      enableLeftEdit: "Enable Left Edit",
+      leftReadOnly: "Lock Left Side",
+      enableRightEdit: "Enable Right Edit",
+      rightReadOnly: "Lock Right Side"
     },
     editor: {
       original: "Original",
@@ -62,8 +66,12 @@ export const translations = {
       swap: "交换",
       reset: "重置",
       copyDiff: "复制差异",
-      enableEdit: "启用编辑",
-      readOnly: "只读模式"
+      enableEdit: "启用右侧编辑",
+      readOnly: "锁定右侧",
+      enableLeftEdit: "启用左侧编辑",
+      leftReadOnly: "锁定左侧",
+      enableRightEdit: "启用右侧编辑",
+      rightReadOnly: "锁定右侧"
     },
     editor: {
       original: "原始版本",
