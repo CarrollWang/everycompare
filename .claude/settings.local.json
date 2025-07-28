@@ -14,7 +14,8 @@
       "Bash(cp:*)",
       "Bash(curl:*)",
       "Bash(find:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": []
   }
