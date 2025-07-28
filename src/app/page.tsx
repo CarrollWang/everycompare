@@ -81,7 +81,7 @@ class ShoppingCart {
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [language, setLanguage] = useState("javascript");
   const [rightReadOnly, setRightReadOnly] = useState(false);
-  const [leftReadOnly, setLeftReadOnly] = useState(true);
+  const [leftReadOnly, setLeftReadOnly] = useState(false);
   const [isDark, setIsDark] = useState(false);
   
   useEffect(() => {
@@ -306,7 +306,11 @@ class ShoppingCart {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => setLeftReadOnly(!leftReadOnly)}
+              onClick={() => {
+                console.log('Before click, leftReadOnly:', leftReadOnly);
+                setLeftReadOnly(!leftReadOnly);
+                console.log('After click, leftReadOnly will be:', !leftReadOnly);
+              }}
               className="btn-hover shadow-modern"
             >
               <Settings className="h-4 w-4 mr-2" />
