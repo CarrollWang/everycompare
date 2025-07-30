@@ -9,7 +9,8 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
-  Home
+  Home,
+  Smartphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Language } from '@/lib/translations';
@@ -62,6 +63,15 @@ const tools: Tool[] = [
     category: 'utility'
   },
   {
+    id: 'product-compare',
+    name: 'Product Compare',
+    nameZh: '产品对比',
+    icon: Smartphone,
+    description: 'Compare digital products side by side',
+    descriptionZh: '数码产品规格对比分析',
+    category: 'utility'
+  },
+  {
     id: 'timestamp-converter',
     name: 'Timestamp Converter',
     nameZh: '时间戳转换',
@@ -84,6 +94,7 @@ interface SidebarProps {
   currentLanguage: Language;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  isMobile?: boolean;
 }
 
 export default function Sidebar({ 
@@ -91,7 +102,8 @@ export default function Sidebar({
   onToolChange, 
   currentLanguage,
   collapsed = false,
-  onToggleCollapse
+  onToggleCollapse,
+  isMobile = false
 }: SidebarProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set(['text', 'developer', 'utility'])
@@ -113,12 +125,12 @@ export default function Sidebar({
 
   return (
     <div className={`h-full bg-gradient-to-b from-muted/30 to-muted/10 border-r border-border flex flex-col transition-all duration-300 ${
-      collapsed ? 'w-16' : 'w-64'
+      isMobile ? 'w-64' : (collapsed ? 'w-16' : 'w-64')
     }`}>
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
                 <Home className="h-4 w-4 text-white" />
@@ -133,18 +145,20 @@ export default function Sidebar({
               </div>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleCollapse}
-            className="p-1 h-auto hover:bg-muted/50"
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleCollapse}
+              className="p-1 h-auto hover:bg-muted/50"
+            >
+              {collapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -156,7 +170,7 @@ export default function Sidebar({
           
           return (
             <div key={category.id} className="mb-6">
-              {!collapsed && (
+              {(!collapsed || isMobile) && (
                 <div
                   className="px-4 mb-2 cursor-pointer hover:bg-muted/20 py-1 rounded-md mx-2"
                   onClick={() => toggleCategory(category.id)}
@@ -174,7 +188,7 @@ export default function Sidebar({
                 </div>
               )}
               
-              {(collapsed || isExpanded) && (
+              {((collapsed && !isMobile) || isExpanded || isMobile) && (
                 <div className="space-y-1 px-2">
                   {categoryTools.map(tool => {
                     const Icon = tool.icon;
@@ -184,17 +198,17 @@ export default function Sidebar({
                       <button
                         key={tool.id}
                         onClick={() => onToolChange(tool.id)}
-                        className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200 hover:bg-muted/40 group ${
+                        className={`w-full flex items-center space-x-3 px-3 py-3 md:py-2 rounded-lg text-left transition-all duration-200 hover:bg-muted/40 group touch-manipulation ${
                           isActive 
                             ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm' 
                             : 'text-muted-foreground hover:text-foreground'
                         }`}
-                        title={collapsed ? (currentLanguage === 'en' ? tool.name : tool.nameZh) : undefined}
+                        title={(collapsed && !isMobile) ? (currentLanguage === 'en' ? tool.name : tool.nameZh) : undefined}
                       >
-                        <Icon className={`h-4 w-4 flex-shrink-0 ${
+                        <Icon className={`h-5 w-5 md:h-4 md:w-4 flex-shrink-0 ${
                           isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
                         }`} />
-                        {!collapsed && (
+                        {(!collapsed || isMobile) && (
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium truncate">
                               {currentLanguage === 'en' ? tool.name : tool.nameZh}
@@ -215,7 +229,7 @@ export default function Sidebar({
       </div>
 
       {/* Footer */}
-      {!collapsed && (
+      {(!collapsed || isMobile) && (
         <div className="p-4 border-t border-border">
           <div className="text-xs text-muted-foreground text-center">
             {currentLanguage === 'en' 

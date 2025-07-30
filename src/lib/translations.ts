@@ -52,6 +52,24 @@ export const translations = {
     toast: {
       leftReadOnlyWarning: "Left editor is locked. Click 'Enable Left Edit' to make changes.",
       rightReadOnlyWarning: "Right editor is locked. Click 'Enable Right Edit' to make changes."
+    },
+    productCompare: {
+      title: "Product Comparison",
+      searchPlaceholder: "Search products...",
+      addToCompare: "Add to Compare",
+      remove: "Remove",
+      selectedForComparison: "Selected for comparison:",
+      clearAll: "Clear All",
+      compare: "Compare",
+      backToSelection: "← Back to Selection",
+      comparing: "Comparing",
+      products: "products",
+      specifications: "Specifications",
+      different: "Different",
+      searchResults: "Search results for",
+      productsFound: "products found",
+      noProductsFound: "No products found",
+      browseCategories: "Browse Categories"
     }
   },
   zh: {
@@ -107,6 +125,24 @@ export const translations = {
     toast: {
       leftReadOnlyWarning: "左侧编辑器已锁定。点击'启用左侧编辑'按钮来进行修改。",
       rightReadOnlyWarning: "右侧编辑器已锁定。点击'启用右侧编辑'按钮来进行修改。"
+    },
+    productCompare: {
+      title: "产品对比",
+      searchPlaceholder: "搜索产品...",
+      addToCompare: "加入对比",
+      remove: "移除",
+      selectedForComparison: "已选择对比:",
+      clearAll: "清空全部",
+      compare: "开始对比",
+      backToSelection: "← 返回选择",
+      comparing: "正在对比",
+      products: "款产品",
+      specifications: "规格参数",
+      different: "不同",
+      searchResults: "搜索结果",
+      productsFound: "款产品",
+      noProductsFound: "未找到产品",
+      browseCategories: "浏览分类"
     }
   }
 };

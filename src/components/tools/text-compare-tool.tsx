@@ -195,96 +195,98 @@ export default function TextCompareTool({ currentLanguage, isDark, onToggleTheme
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Toolbar */}
-      <div className="glass-effect border-b border-border px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-3">
-              <select 
-                value={language} 
-                onChange={(e) => setLanguage(e.target.value)}
-                className="toolbar-select px-3 py-1 rounded-md text-sm"
-              >
-                {languages.map((lang) => (
-                  <option key={lang.value} value={lang.value}>
-                    {lang.label}
-                  </option>
-                ))}
-              </select>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={toggleLineNumbers}
-                className="btn-hover shadow-modern"
-              >
-                {showLineNumbers ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                <span className="ml-2">{t.toolbar.lineNumbers}</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleSwap}
-                className="btn-hover shadow-modern"
-              >
-                <ArrowLeftRight className="h-4 w-4 mr-2" />
-                {t.toolbar.swap}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleReset}
-                className="btn-hover shadow-modern"
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                {t.toolbar.reset}
-              </Button>
-            </div>
+      <div className="glass-effect border-b border-border px-3 md:px-6 py-3">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            <select 
+              value={language} 
+              onChange={(e) => setLanguage(e.target.value)}
+              className="toolbar-select px-2 md:px-3 py-1 rounded-md text-sm flex-shrink-0"
+            >
+              {languages.map((lang) => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={toggleLineNumbers}
+              className="btn-hover shadow-modern text-xs md:text-sm"
+            >
+              {showLineNumbers ? <Eye className="h-3 w-3 md:h-4 md:w-4" /> : <EyeOff className="h-3 w-3 md:h-4 md:w-4" />}
+              <span className="ml-1 md:ml-2 hidden sm:inline">{t.toolbar.lineNumbers}</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleSwap}
+              className="btn-hover shadow-modern text-xs md:text-sm"
+            >
+              <ArrowLeftRight className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">{t.toolbar.swap}</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleReset}
+              className="btn-hover shadow-modern text-xs md:text-sm"
+            >
+              <RotateCcw className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">{t.toolbar.reset}</span>
+            </Button>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <Button variant="outline" size="sm" onClick={onToggleTheme} className="btn-hover shadow-modern">
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {isDark ? <Sun className="h-3 w-3 md:h-4 md:w-4" /> : <Moon className="h-3 w-3 md:h-4 md:w-4" />}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleNewFile} className="btn-hover shadow-modern">
-              <FileText className="h-4 w-4 mr-2" />
-              {t.header.new}
+            <Button variant="outline" size="sm" onClick={handleNewFile} className="btn-hover shadow-modern text-xs md:text-sm">
+              <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">{t.header.new}</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleFileUpload('left')} className="btn-hover shadow-modern">
-              <Upload className="h-4 w-4 mr-2" />
-              {t.header.openLeft}
+            <Button variant="outline" size="sm" onClick={() => handleFileUpload('left')} className="btn-hover shadow-modern text-xs md:text-sm">
+              <Upload className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden md:inline">{t.header.openLeft}</span>
+              <span className="md:hidden">L</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleFileUpload('right')} className="btn-hover shadow-modern">
-              <Upload className="h-4 w-4 mr-2" />
-              {t.header.openRight}
+            <Button variant="outline" size="sm" onClick={() => handleFileUpload('right')} className="btn-hover shadow-modern text-xs md:text-sm">
+              <Upload className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden md:inline">{t.header.openRight}</span>
+              <span className="md:hidden">R</span>
             </Button>
             <Button 
               variant="outline" 
               size="sm"
               onClick={toggleLeftReadOnly}
-              className="btn-hover shadow-modern"
+              className="btn-hover shadow-modern text-xs md:text-sm"
             >
-              <Settings className="h-4 w-4 mr-2" />
-              {leftReadOnly ? t.toolbar.enableLeftEdit : t.toolbar.leftReadOnly}
+              <Settings className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden lg:inline">{leftReadOnly ? t.toolbar.enableLeftEdit : t.toolbar.leftReadOnly}</span>
+              <span className="lg:hidden">L</span>
             </Button>
             <Button 
               variant="outline" 
               size="sm"
               onClick={handleCopyDiff}
-              className="btn-hover shadow-modern"
+              className="btn-hover shadow-modern text-xs md:text-sm"
             >
-              <Copy className="h-4 w-4 mr-2" />
-              {t.toolbar.copyDiff}
+              <Copy className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">{t.toolbar.copyDiff}</span>
             </Button>
             <Button 
               variant="outline" 
               size="sm"
               onClick={toggleRightReadOnly}
-              className="btn-hover shadow-modern"
+              className="btn-hover shadow-modern text-xs md:text-sm"
             >
-              <Settings className="h-4 w-4 mr-2" />
-              {rightReadOnly ? t.toolbar.enableRightEdit : t.toolbar.rightReadOnly}
+              <Settings className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden lg:inline">{rightReadOnly ? t.toolbar.enableRightEdit : t.toolbar.rightReadOnly}</span>
+              <span className="lg:hidden">R</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleDownload} className="btn-primary btn-hover">
-              <Download className="h-4 w-4 mr-2" />
-              {t.header.save}
+            <Button variant="ghost" size="sm" onClick={handleDownload} className="btn-primary btn-hover text-xs md:text-sm">
+              <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">{t.header.save}</span>
             </Button>
           </div>
         </div>
@@ -294,15 +296,15 @@ export default function TextCompareTool({ currentLanguage, isDark, onToggleTheme
       <div className="flex-1 flex flex-col">
         {/* File Headers */}
         <div className="flex border-b border-border bg-gradient-to-r from-muted/30 to-muted/10">
-          <div className="flex-1 px-6 py-3 bg-muted/30 backdrop-blur-sm">
-            <span className="text-sm font-semibold text-foreground flex items-center">
+          <div className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-muted/30 backdrop-blur-sm">
+            <span className="text-xs md:text-sm font-semibold text-foreground flex items-center">
               <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
               {t.editor.original}
             </span>
           </div>
           <Separator orientation="vertical" />
-          <div className="flex-1 px-6 py-3 bg-muted/30 backdrop-blur-sm">
-            <span className="text-sm font-semibold text-foreground flex items-center">
+          <div className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-muted/30 backdrop-blur-sm">
+            <span className="text-xs md:text-sm font-semibold text-foreground flex items-center">
               <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
               {t.editor.modified}
             </span>
@@ -327,18 +329,18 @@ export default function TextCompareTool({ currentLanguage, isDark, onToggleTheme
       </div>
 
       {/* Status Bar */}
-      <div className="status-bar border-t border-border px-6 py-3">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center space-x-6">
+      <div className="status-bar border-t border-border px-3 md:px-6 py-2 md:py-3">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 text-xs md:text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-3 md:gap-6">
             <span className="flex items-center">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
               {t.status.ready}
             </span>
             <span>{t.status.language}: {languages.find(lang => lang.value === language)?.label}</span>
-            <span>{t.status.left}: {leftReadOnly ? t.status.readOnly : t.status.editable}</span>
-            <span>{t.status.right}: {rightReadOnly ? t.status.readOnly : t.status.editable}</span>
+            <span className="hidden md:inline">{t.status.left}: {leftReadOnly ? t.status.readOnly : t.status.editable}</span>
+            <span className="hidden md:inline">{t.status.right}: {rightReadOnly ? t.status.readOnly : t.status.editable}</span>
           </div>
-          <div className="flex items-center space-x-6">
+          <div className="flex flex-wrap items-center gap-3 md:gap-6">
             <span className="font-mono text-xs">{t.status.left}: {stats.leftLines} {t.status.lines}, {stats.leftChars} {t.status.chars}</span>
             <span className="font-mono text-xs">{t.status.right}: {stats.rightLines} {t.status.lines}, {stats.rightChars} {t.status.chars}</span>
           </div>
